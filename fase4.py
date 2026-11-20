@@ -4,6 +4,7 @@
 
 from abc import ABC, abstractmethod
 import logging
+import getpass
 
 # Configuración del archivo de Logs para registrar eventos y errores sin detener el programa
 logging.basicConfig(
@@ -200,14 +201,14 @@ class reservas(EntidadGeneral):
         self.descripcion = descripcion.strip() if descripcion else "Sin descripción"
         self.cliente = cliente
         self.servicio = servicio
-        
+
         try:
             self.horaini = int(horaini) if horaini != "" else 0
             self.horafin = int(horafin) if horafin != "" else 0
             self.dias = int(dias) if dias != "" else 1
         except ValueError as err:
             raise ErrorReservaInvalida("Las horas y días deben ser valores numéricos enteros.") from err
-            
+
         self.estado = "Pendiente"
         self.costo_final = 0.0
 
@@ -287,7 +288,6 @@ class reservas(EntidadGeneral):
 # ======================================================================
 def solicitar_datos_cliente_validados(id_cliente):
     """Pide cada campo del cliente y lo valida inmediatamente antes de pasar al siguiente."""
-    # Se instancia con valores base válidos y luego cada setter valida su propio campo al asignarse
     cliente_obj = Cliente(id_cliente, "Base", "0000000", "000000", "base@dominio.com")
 
     while True:
@@ -430,12 +430,12 @@ if __name__ == "__main__":
         ReservaSala(102, "Sala de Desarrollo de Software", 60000),
         ReservaSala(103, "Sala de Laboratorio Financiero", 80000)
     ]
-    
+
     cat_equipos = [
         AlquilerEquipo(201, "Servidor Físico", 150000),
         AlquilerEquipo(202, "Equipo Portátil (Laptop)", 80000)
     ]
-    
+
     cat_asesorias = [
         AsesoriaEspecializada(301, "Certificación", 200000),
         AsesoriaEspecializada(302, "Instalación", 150000),
@@ -449,11 +449,11 @@ if __name__ == "__main__":
     print("   SISTEMA DE GESTIÓN - SOFTWARE FJ      ")
     print("=========================================")
 
-    # BUCLE DE AUTENTICACIÓN
+    # BUCLE DE AUTENTICACIÓN CON CONTRASEÑA OCULTA
     autenticado = False
     while not autenticado:
         usu = input("Usuario: ").strip()
-        pwd = input("Contraseña: ").strip()
+        pwd = getpass.getpass("Contraseña: ").strip()
         if usu == "administrador" and pwd == "Televisor2020.":
             logging.info("Inicio de sesión exitoso del administrador.")
             print("\n>>> Acceso Concedido <<<\n")
@@ -485,14 +485,13 @@ if __name__ == "__main__":
     if modo == '2' or ir_manual == 'S':
         while True:
             print("\n--- REGISTRO DE NUEVO CLIENTE ---")
-            # Validación inmediata campo por campo
             nuevo_cliente = solicitar_datos_cliente_validados(id_cliente_actual)
             lista_clientes.append(nuevo_cliente)
             logging.info(f"Cliente registrado manualmente: {nuevo_cliente.nombre} (Doc: {nuevo_cliente.documento})")
             id_cliente_actual += 1
-            
+
             reservas_cliente_actual = []
-            
+
             # ==================================================
             # BUCLE 2: MÚLTIPLES SERVICIOS PARA EL MISMO CLIENTE
             # ==================================================
@@ -557,11 +556,11 @@ if __name__ == "__main__":
 
                 try:
                     nueva_reserva = reservas(
-                        id_entidad=id_reserva_actual, fecha=fecha, descripcion=descripcion, 
-                        cliente=nuevo_cliente, servicio=servicio_elegido, 
+                        id_entidad=id_reserva_actual, fecha=fecha, descripcion=descripcion,
+                        cliente=nuevo_cliente, servicio=servicio_elegido,
                         horaini=horaini, horafin=horafin, dias=dias
                     )
-                    
+
                     if nueva_reserva.confirmar_reserva():
                         lista_reservas.append(nueva_reserva)
                         reservas_cliente_actual.append(nueva_reserva)
@@ -638,21 +637,21 @@ if __name__ == "__main__":
     print("\n\n=======================================================")
     print("   REPORTE FINANCIERO TOTAL CONSOLIDADO - SOFTWARE FJ  ")
     print("=======================================================")
-    
+
     gran_total_ingresos = 0
     total_servicios_prestados = 0
 
     for cliente in lista_clientes:
         print(f"\n>> {cliente.obtener_resumen()}")
         subtotal_acumulado = 0
-        
+
         for r in lista_reservas:
             if r.cliente.id_entidad == cliente.id_entidad:
                 print(f"   {r.obtener_resumen()}")
                 if r.estado == "Facturada":
                     subtotal_acumulado += r.costo_final
                     total_servicios_prestados += 1
-                
+
         print(f"   --- Subtotal Facturado Cliente: ${subtotal_acumulado:,.2f}")
         gran_total_ingresos += subtotal_acumulado
 
